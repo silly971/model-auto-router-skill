@@ -1,42 +1,127 @@
-# model-auto-router-skill（日本語）
+# 🔀 OpenClaw Model Auto Router Skill
 
-## Overview
+[English](./README.md) | [简体中文](./README.zh-CN.md) | **日本語** | [Español](./README.es.md)
 
-`model-auto-router-skill` は、リクエストを `code` / `image` / `edit` / `video` の専用レーンに振り分けます。
+> 1つの入口で、code/image/edit/video リクエストを適切なモデルレーンへ安定的に振り分けます。
 
-## Features
+<p align="center">
+  <img src="https://img.shields.io/badge/OpenClaw-Skill-blue?style=flat-square" alt="OpenClaw Skill" />
+  <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="MIT License" />
+</p>
 
-- `--task auto` による意図ベースの自動ルーティング。
-- `--task code|image|edit|video` による強制レーン実行。
-- 画像/編集/動画結果の Telegram 自動送信（任意）。
-- `--dry-run --json` による安全な事前検証。
+---
 
-## Install
+## ✨ Features
 
-1. このフォルダを OpenClaw workspace の `skills/` に配置します。
-2. `SKILL.md`、`scripts/dispatch.py`、`references/config.md` が存在することを確認します。
-3. 必要に応じて OpenClaw gateway を再起動します。
+| コマンド | 説明 |
+|----------|------|
+| `--task auto` | 意図を自動判定して `code` / `image` / `edit` / `video` に振り分け |
+| `--task code` | コードレーンを強制 |
+| `--task image` | 画像生成レーンを強制 |
+| `--task edit` | 画像編集レーンを強制（`--image-input` 必須） |
+| `--task video` | 動画レーンを強制 |
+| `--dry-run --json` | 実生成なしでモデルマッピングを検証 |
+| `--telegram auto|on|off` | Telegram 自動送信を制御 |
 
-## Config
+## Why?
 
-設定は `references/config.md` を参照してください。
-このリポジトリの値はすべてプレースホルダーです。実運用値に置き換えてください。
+1つの Agent が「コーディング」と「マルチモーダル生成」を同時に扱うと、
+手動切替は壊れやすくなります。
+この skill はルーティングを決定的に保ちます。
 
-## Security
+## How It Works
 
-- 実際の API キーや Bot トークンをコミットしない。
-- 実際の Chat ID をコミットしない。
-- 内部/私有エンドポイント URL をコミットしない。
-- 秘密情報は環境変数またはシークレット管理で保持する。
+```text
+あなた: ネオン風ポスターを作成して
+Skill: image レーンへルーティング
+結果: 画像を返却（必要なら Telegram に自動送信）
 
-## Usage
-
-```bash
-python3 {baseDir}/scripts/dispatch.py --task auto --prompt "Python 関数を書いて"
-python3 {baseDir}/scripts/dispatch.py --task code --prompt "この関数をリファクタ"
-python3 {baseDir}/scripts/dispatch.py --task image --prompt "ポスター画像を作成" --size 1024x1024
+あなた: この Python コードをリファクタして
+Skill: code レーンへルーティング
+結果: コード結果を返却
 ```
 
-## License
+## 🚀 Quick Start
+
+### 🧑 人間ユーザー
+
+次のメッセージを OpenClaw agent に送ってください：
+
+> Please install https://github.com/silly971/model-auto-router-skill into my OpenClaw workspace skills, replace placeholders in references/config.md with my real local values, and run dry-run validation for code/image/edit/video lanes.
+
+### 🤖 AI エージェント
+
+まず人間の許可を得てから、以下の手順を実行してください。
+
+---
+
+## 📦 Installation
+
+### 1. リポジトリをクローン
+
+```bash
+git clone https://github.com/silly971/model-auto-router-skill.git /opt/openclaw-skills/model-auto-router-skill
+```
+
+### 2. OpenClaw workspace に配置
+
+```bash
+mkdir -p ~/.openclaw/workspace/skills
+cp -r /opt/openclaw-skills/model-auto-router-skill ~/.openclaw/workspace/skills/model-auto-router
+```
+
+### 3. 実行環境を設定
+
+`references/config.md` のプレースホルダーを、ローカルの実値に置き換えます。
+
+### 4. 検証
+
+```bash
+python3 ~/.openclaw/workspace/skills/model-auto-router/scripts/dispatch.py --task auto --prompt "Python 関数を書いて" --dry-run --json
+```
+
+## ⚙️ Configuration
+
+主要変数（詳細は `references/config.md`）：
+
+| 変数グループ | 用途 |
+|--------------|------|
+| `ROUTER_CODE_*` | コード用エンドポイント/キー/モデル ID |
+| `ROUTER_IMAGE_*` | 画像生成用エンドポイント/キー/モデル ID |
+| `ROUTER_EDIT_*` | 画像編集用エンドポイント/キー/モデル ID |
+| `ROUTER_VIDEO_*` | 動画用エンドポイント/キー/モデル ID/リトライ設定 |
+| `ROUTER_SEND_TELEGRAM` / `TELEGRAM_*` | Telegram 自動配信設定 |
+
+## 🔒 Security
+
+- このリポジトリは**プレースホルダー設定のみ**を含みます。
+- 実際の API キー、Bot トークン、Chat ID、内部 URL はコミットしないでください。
+- 秘密情報は環境変数またはシークレット管理で扱ってください。
+
+## 📁 Project Structure
+
+```text
+model-auto-router-skill/
+├── SKILL.md
+├── agents/
+│   └── openai.yaml
+├── scripts/
+│   └── dispatch.py
+├── references/
+│   └── config.md
+├── README.md
+├── README.zh-CN.md
+├── README.ja.md
+├── README.es.md
+├── .gitignore
+└── LICENSE
+```
+
+## 🤝 Contributing
+
+Issue / PR を歓迎します。
+
+## 📄 License
 
 MIT。`LICENSE` を参照してください。
