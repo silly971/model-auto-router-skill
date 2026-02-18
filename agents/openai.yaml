@@ -1,0 +1,4 @@
+interface:
+  display_name: "Model Auto Router"
+  short_description: "Auto route code/image/video requests to target models"
+  default_prompt: "Use $model-auto-router to route this task to the right model automatically."
