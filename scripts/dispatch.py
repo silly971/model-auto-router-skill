@@ -372,50 +372,110 @@ def normalize_choice_content(content) -> str:
     return ""
 
 
+def extract_code_text_from_response(res: dict) -> str:
+    choices = res.get("choices") or []
+    if not choices or not isinstance(choices[0], dict):
+        return ""
+
+    choice = choices[0]
+    msg = choice.get("message") or {}
+    if isinstance(msg, dict):
+        text = normalize_choice_content(msg.get("content")).strip()
+        if text:
+            return text
+
+    legacy_text = choice.get("text")
+    if isinstance(legacy_text, str):
+        return legacy_text.strip()
+
+    return ""
+
+
+def summarize_response_for_error(res: dict) -> str:
+    summary = {
+        "id": res.get("id"),
+        "model": res.get("model"),
+        "error": res.get("error"),
+        "choices": res.get("choices"),
+    }
+    try:
+        return json.dumps(summary, ensure_ascii=False)[:500]
+    except Exception:
+        return str(summary)[:500]
+
+
 def run_code(settings: dict, prompt: str, timeout: int) -> dict:
     primary_model = settings["code_model"]
     fallback_model = settings.get("code_fallback_model", "")
+    fb_base = settings.get("code_fallback_base_url", "")
+    fb_key = settings.get("code_fallback_api_key", "")
 
-    payload = {
-        "model": primary_model,
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0.2,
-    }
-
-    used_model = primary_model
-    fallback_from = ""
-    try:
+    def call_code_once(base_url: str, api_key: str, model: str) -> tuple[dict, str]:
+        payload = {
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.2,
+        }
         res = call_json_api(
-            settings["code_base_url"],
+            base_url,
             "/chat/completions",
-            settings["code_api_key"],
+            api_key,
             payload,
             timeout,
         )
-    except RuntimeError:
-        fb_base = settings.get("code_fallback_base_url", "")
-        fb_key = settings.get("code_fallback_api_key", "")
-        if fallback_model and fb_base and fb_key:
-            payload["model"] = fallback_model
-            res = call_json_api(
-                fb_base,
-                "/chat/completions",
-                fb_key,
-                payload,
-                timeout,
-            )
+        text = extract_code_text_from_response(res)
+        return res, text
+
+    used_model = primary_model
+    fallback_from = ""
+    primary_err = None
+    primary_res = {}
+    text = ""
+
+    try:
+        primary_res, text = call_code_once(
+            settings["code_base_url"],
+            settings["code_api_key"],
+            primary_model,
+        )
+    except RuntimeError as exc:
+        primary_err = exc
+
+    can_use_fallback = bool(fallback_model and fb_base and fb_key)
+    if (primary_err is not None or not text) and can_use_fallback:
+        fallback_res, fallback_text = call_code_once(fb_base, fb_key, fallback_model)
+        if fallback_text:
             used_model = fallback_model
             fallback_from = primary_model
-        else:
-            raise
+            result = {"task": "code", "model": used_model, "text": fallback_text, "raw": fallback_res}
+            if fallback_from:
+                result["fallbackFrom"] = fallback_from
+            return result
 
-    text = ""
-    choices = res.get("choices") or []
-    if choices and isinstance(choices[0], dict):
-        msg = choices[0].get("message") or {}
-        text = normalize_choice_content(msg.get("content"))
+        if primary_err is not None:
+            raise RuntimeError(
+                f"Primary code model failed ({primary_model}): {primary_err}; "
+                f"fallback returned empty content ({fallback_model}). "
+                f"fallback_response={summarize_response_for_error(fallback_res)}"
+            )
 
-    result = {"task": "code", "model": used_model, "text": text, "raw": res}
+        raise RuntimeError(
+            f"Primary code model returned empty content ({primary_model}); "
+            f"fallback also empty ({fallback_model}). "
+            f"primary_response={summarize_response_for_error(primary_res)} "
+            f"fallback_response={summarize_response_for_error(fallback_res)}"
+        )
+
+    if primary_err is not None:
+        raise primary_err
+
+    if not text:
+        raise RuntimeError(
+            f"Code model returned empty content ({primary_model}). "
+            f"response={summarize_response_for_error(primary_res)}"
+        )
+
+    result = {"task": "code", "model": used_model, "text": text, "raw": primary_res}
     if fallback_from:
         result["fallbackFrom"] = fallback_from
     return result

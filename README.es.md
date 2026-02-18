@@ -24,6 +24,12 @@
 | `--dry-run --json` | Valida mapeo de modelos sin generación real |
 | `--telegram auto|on|off` | Controla el envío automático a Telegram |
 
+## 🆕 Actualización reciente (2026-02-18)
+
+- Mayor fiabilidad en el carril de código: si el modelo principal falla o devuelve respuesta vacía, el dispatcher reintenta automáticamente con el modelo de fallback.
+- Se añadieron errores explícitos para respuestas vacías con un resumen compacto de la respuesta upstream.
+- El repositorio sigue sanitizado: `references/config.md` contiene solo placeholders.
+
 ## Why?
 
 Cuando un solo agent maneja tareas de código y multimedia, el cambio manual de modelo se vuelve frágil.

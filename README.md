@@ -24,6 +24,12 @@
 | `--dry-run --json` | Validate runtime model mapping without live generation |
 | `--telegram auto|on|off` | Control Telegram auto-delivery behavior |
 
+## 🆕 Latest Update (2026-02-18)
+
+- Improved code lane reliability: if the primary code model fails or returns empty content, dispatcher auto-retries the fallback model.
+- Added explicit empty-response errors with a compact upstream response summary for faster troubleshooting.
+- Repository remains sanitized: `references/config.md` uses placeholders only.
+
 ## Why?
 
 When one agent handles mixed requests, model switching gets messy and error-prone.
