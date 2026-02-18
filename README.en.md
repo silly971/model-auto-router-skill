@@ -28,6 +28,7 @@
 
 - Improved code lane reliability: if the primary code model fails or returns empty content, dispatcher auto-retries the fallback model.
 - Added explicit empty-response errors with a compact upstream response summary for faster troubleshooting.
+- Added a strict delivery confirmation contract: only claim Telegram delivery after tool output contains `[telegram] delivered`.
 - Repository remains sanitized: `references/config.md` uses placeholders only.
 
 ## Why?
@@ -107,6 +108,12 @@ Main variables (see full list in `references/config.md`):
 - This repository contains **placeholder config only**.
 - Never commit real API keys, bot tokens, chat IDs, or private endpoints.
 - Keep secrets in local environment variables or a secret manager.
+
+Publish-time quick scan:
+
+```bash
+rg -n "sk-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{20,}|[0-9]{8,12}:[A-Za-z0-9_-]{20,}" -S .
+```
 
 ## 📁 Project Structure
 

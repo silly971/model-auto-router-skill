@@ -28,6 +28,7 @@
 
 - 增强代码通道稳定性：主代码模型报错或返回空内容时，自动切到 fallback 模型重试。
 - 增加明确的空响应报错，并附带精简上游响应摘要，方便排障。
+- 新增严格回执约束：仅当工具输出包含 `[telegram] delivered` 时，才允许声明“已发送到 Telegram”。
 - 仓库继续保持脱敏：`references/config.md` 仅提供占位符示例。
 
 ## Why?
@@ -107,6 +108,12 @@ python3 ~/.openclaw/workspace/skills/model-auto-router/scripts/dispatch.py --tas
 - 本仓库仅提供**占位符配置**。
 - 禁止提交真实 API Key、Bot Token、Chat ID、私有接口地址。
 - 敏感信息请放环境变量或密钥管理系统。
+
+发布前快速扫描：
+
+```bash
+rg -n "sk-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{20,}|[0-9]{8,12}:[A-Za-z0-9_-]{20,}" -S .
+```
 
 ## 📁 Project Structure
 

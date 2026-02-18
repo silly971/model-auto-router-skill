@@ -60,3 +60,10 @@ Read `references/config.md` before changing model mapping.
 - Use `--dry-run --json` first when changing mappings.
 - For `edit`, always pass `--image-input`.
 - Do not print API keys or auth headers.
+
+## Delivery Confirmation Contract
+
+- For `image`/`edit`/`video` requests, you must execute dispatcher via tool call before final reply.
+- You can only say "already sent to Telegram" when tool output explicitly includes `[telegram] delivered`.
+- If dispatcher is still running, poll until completion before claiming delivery.
+- If dispatcher or Telegram delivery fails, report the exact failure and ask user to retry; do not claim success.

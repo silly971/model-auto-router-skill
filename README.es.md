@@ -28,6 +28,7 @@
 
 - Mayor fiabilidad en el carril de código: si el modelo principal falla o devuelve respuesta vacía, el dispatcher reintenta automáticamente con el modelo de fallback.
 - Se añadieron errores explícitos para respuestas vacías con un resumen compacto de la respuesta upstream.
+- Se añadió una regla estricta de confirmación: solo declarar entrega en Telegram cuando la salida de herramienta incluya `[telegram] delivered`.
 - El repositorio sigue sanitizado: `references/config.md` contiene solo placeholders.
 
 ## Why?
@@ -103,6 +104,12 @@ Variables principales (lista completa en `references/config.md`):
 - Este repositorio incluye **solo configuración de ejemplo**.
 - No subas claves API reales, tokens de bot, chat IDs ni endpoints privados.
 - Guarda secretos en variables de entorno o en un gestor de secretos.
+
+Escaneo rápido antes de publicar:
+
+```bash
+rg -n "sk-[A-Za-z0-9_-]{20,}|ghp_[A-Za-z0-9]{20,}|[0-9]{8,12}:[A-Za-z0-9_-]{20,}" -S .
+```
 
 ## 📁 Project Structure
 
